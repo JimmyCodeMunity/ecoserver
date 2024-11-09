@@ -5,10 +5,10 @@ const bcrypt = require("bcryptjs");
 const Reseller = require("../models/Reseller");
 const Message = require("../models/MessageModel");
 if (process.env.NODE_ENV !== "PRODUCTION") {
-    require("dotenv").config({
-      path: "./.env",
-    });
-  }
+  require("dotenv").config({
+    path: "./.env",
+  });
+}
 const jwttoken = process.env.JWT_SECRET;
 
 const getAllUsers = async (req, res) => {
@@ -79,7 +79,7 @@ const Login = async (req, res) => {
     }
     if (user.status === "Approved") {
       const token = jwt.sign({ email: user.email }, jwttoken);
-      console.log(token)
+      console.log(token);
       if (res.status(200)) {
         console.log("login successfull");
         return res.send({ status: "ok", data: token });
@@ -193,111 +193,120 @@ const updateUserPasswordByEmail = async (req, res) => {
   }
 };
 
-const getUserData = async(req,res)=>{
-    const {token} = req.body;
-    try {
-      const user = await jwt.verify(token,jwttoken)
-      const useremail = user.email;
-      const userdata = await Reseller.findOne({email:useremail})
-      if(!userdata){
-        return res.status(400).json({message:"User not found"})
-      }
-      console.log(userdata)
-      res.status(200).json({message:"User data fetched successfully", userdata})
-      
-      
-    } catch (error) {
-      console.log("error getting user data:", error);
-      res.status(500).json({ message: error.message });
-      return;
-      
+const getUserData = async (req, res) => {
+  const { token } = req.body;
+  try {
+    const user = await jwt.verify(token, jwttoken);
+    const useremail = user.email;
+    const userdata = await Reseller.findOne({ email: useremail });
+    if (!userdata) {
+      return res.status(400).json({ message: "User not found" });
     }
+    console.log(userdata);
+    res
+      .status(200)
+      .json({ message: "User data fetched successfully", userdata });
+  } catch (error) {
+    console.log("error getting user data:", error);
+    res.status(500).json({ message: error.message });
+    return;
   }
+};
 
-  const getMessages = async (req, res) => {
-    try {
-      const { sender, recipient } = req.query;
-      const messages = await Message.find({
-        $or: [
-          { sender: sender, recipient: recipient },
-          { sender: recipient, recipient: sender },
-        ],
-      })
-      // .populate([
-      //   { path: "sender", select: "_id firstName lastName companyName" },
-      //   { path: "recipient", select: "_id firstName lastName companyName" }
-      // ]);
-  
-      res.status(200).json(messages);
-    } catch (error) {
-      console.log("error getting messages:", error);
-      res.status(500).json({ message: error.message });
-    }
-  };
+const getMessages = async (req, res) => {
+  try {
+    const { sender, recipient } = req.query;
+    const messages = await Message.find({
+      $or: [
+        { sender: sender, recipient: recipient },
+        { sender: recipient, recipient: sender },
+      ],
+    });
+    // .populate([
+    //   { path: "sender", select: "_id firstName lastName companyName" },
+    //   { path: "recipient", select: "_id firstName lastName companyName" }
+    // ]);
 
+    res.status(200).json(messages);
+  } catch (error) {
+    console.log("error getting messages:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  const getChatList = async (req, res) => {
-    try {
-      const mongoose = require("mongoose");
-      const userId = new mongoose.Types.ObjectId(req.query.userId);
-      console.log("chat userid",userId)
-  
-      const chatList = await Message.aggregate([
-        {
-          $match: {
-            $or: [{ sender: userId }, { recipient: userId }]
-          }
+const getChatList = async (req, res) => {
+  try {
+    const mongoose = require("mongoose");
+    const userId = new mongoose.Types.ObjectId(req.query.userId);
+    console.log("chat userid", userId);
+
+    const chatList = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ sender: userId }, { recipient: userId }],
         },
-        {
-          $group: {
-            _id: {
-              sender: "$sender",
-              recipient: "$recipient"
+      },
+      {
+        $group: {
+          _id: {
+            sender: "$sender",
+            recipient: "$recipient",
+          },
+          latestMessage: { $last: "$content" },
+          timestamp: { $last: "$timestamp" },
+        },
+      },
+      {
+        $project: {
+          chatPartner: {
+            $cond: {
+              if: { $eq: ["$_id.sender", userId] },
+              then: "$_id.recipient",
+              else: "$_id.sender",
             },
-            latestMessage: { $last: "$content" },
-            timestamp: { $last: "$timestamp" }
-          }
+          },
+          latestMessage: 1,
+          timestamp: 1,
         },
-        {
-          $project: {
-            chatPartner: {
-              $cond: {
-                if: { $eq: ["$_id.sender", userId] },
-                then: "$_id.recipient",
-                else: "$_id.sender"
-              }
-            },
-            latestMessage: 1,
-            timestamp: 1
-          }
+      },
+      {
+        $lookup: {
+          from: "users", // replace "users" with your actual user collection name
+          localField: "chatPartner",
+          foreignField: "_id",
+          as: "chatPartnerInfo",
         },
-        {
-          $lookup: {
-            from: "users", // replace "users" with your actual user collection name
-            localField: "chatPartner",
-            foreignField: "_id",
-            as: "chatPartnerInfo"
-          }
+      },
+      { $unwind: "$chatPartnerInfo" },
+      {
+        $project: {
+          "chatPartnerInfo.password": 0, // Exclude sensitive info like password
         },
-        { $unwind: "$chatPartnerInfo" },
-        {
-          $project: {
-            "chatPartnerInfo.password": 0 // Exclude sensitive info like password
-          }
-        },
-        { $sort: { timestamp: -1 } }
-      ]);
-  
-      console.log(chatList); // Log chatList to debug
-      res.status(200).json(chatList);
-    } catch (error) {
-      console.log("error getting chat list:", error);
-      res.status(500).json({ message: error.message });
-    }
-  };
-  
-  
-  
+      },
+      { $sort: { timestamp: -1 } },
+    ]);
+
+    console.log(chatList); // Log chatList to debug
+    res.status(200).json(chatList);
+  } catch (error) {
+    console.log("error getting chat list:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getChats = async (req, res) => {
+  const userId = req.query.userId;
+  try {
+    const messages = await Message.find({
+      $or: [{ sender: userId }, { recipient: userId }],
+    })
+      .populate("sender")
+      .populate("recipient");
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch chats" });
+  }
+};
 
 module.exports = {
   getAllUsers,
@@ -308,5 +317,6 @@ module.exports = {
   updateUserPasswordByEmail,
   getUserData,
   getMessages,
-  getChatList
+  getChatList,
+  getChats
 };

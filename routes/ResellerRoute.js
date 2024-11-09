@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllUsers, Login, createUser, getAllUsersByEmail,getChatList, updateUserByEmail, updateUserPasswordByEmail, getUserData, getMessages } = require('../controllers/ResellerController');
+const { getAllUsers, Login, createUser, getAllUsersByEmail,getChatList, updateUserByEmail, updateUserPasswordByEmail, getUserData, getMessages, getChats } = require('../controllers/ResellerController');
 
 const router = express.Router();
 router.use(express.json());
@@ -21,6 +21,7 @@ router.post('/getuserdata',getUserData)
 router.put('/updateuser/:email',updateUserByEmail);
 router.get('/getmessages',getMessages);
 router.get('/chatlist',getChatList)
+router.get('/chats',getChats)
 
 
 router.put('/updatepassword/:email',updateUserPasswordByEmail);
