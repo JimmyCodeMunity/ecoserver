@@ -70,7 +70,7 @@ const getChannelMessages = async (request, response, next) => {
     try {
         const {channelId} = request.params;
         const channel = await Channel.findById(channelId).populate({path:"messages", populate: {
-            path: 'sender', select: "firstName lastName email _id companyName",
+            path: 'sender', select: "firstName lastName email _id companyName address dollarExchangeRate phoneNumber email",
         }});
         if(!channel) {
             return response.status(404).send("Channel not found");
