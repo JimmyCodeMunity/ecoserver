@@ -93,6 +93,7 @@ const Login = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({message:"error during login"})
+    console.log(error)
   }
 };
 
