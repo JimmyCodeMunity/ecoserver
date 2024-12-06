@@ -80,12 +80,12 @@ const port = process.env.PORT;
 const db = process.env.DB_URL;
 
 app.listen(port, (req, res) => {
-  console.log(`Server running on port ${port} at ${db}`);
+  console.log(`Server running on port ${port}`);
 });
 
 // Connect to MongoDB
 mongoose
-  .connect(db, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(db)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Failed to connect to MongoDB", err.message));
 //strict query

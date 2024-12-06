@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Reseller = require("../models/Reseller");
 const Message = require("../models/MessageModel");
+const nodeMailer = require('nodemailer')
 if (process.env.NODE_ENV !== "PRODUCTION") {
   require("dotenv").config({
     path: "./.env",
@@ -71,7 +72,7 @@ const Login = async (req, res) => {
     const user = await Reseller.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "User not found" });
+      return res.status(401).json({ message: "User not found" });
     }
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -90,8 +91,46 @@ const Login = async (req, res) => {
     } else {
       res.status(403).json({ error: "Wait for account to be approved" });
     }
-  } catch (error) {}
+  } catch (error) {
+    res.status(500).json({message:"error during login"})
+  }
 };
+
+const sendVerificationEmail = async(email,firstName,otp)=>{
+  try {
+    const transporter = nodeMailer.createTransport({
+      host:'smtp.gmail.com',//if using google
+      port:465,
+      secure:true,
+      auth:{
+          user:'dev.jimin02@gmail.com',//host username here-could be email
+          pass:''//host password here
+      }
+  });
+
+  const emailbody = `
+<h1>Email Testing by nodemailer</h1>
+<p>Nodemailer is the best</p>
+
+`;
+
+  const info = await transporter.sendMail({
+      from:'dev.jimin02@gmail.com',//sender email
+      to:email,//receiveremail
+      subject:'Account Verification',
+      html:emailbody //this is the defined body
+  
+
+  });
+
+  console.log("Email sent successfully!!", info.messageId)
+    
+  } catch (error) {
+    res.status(401).json({message:"error sending email"})
+    console.log(error)
+    
+  }
+}
 
 const createUser = async (req, res) => {
   try {
@@ -114,7 +153,8 @@ const createUser = async (req, res) => {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-
+    // generate random number
+    const otp = Math.floor(1000 + Math.random() * 9000);
     // Create a new user
     const user = await Reseller.create({
       firstName,
@@ -128,6 +168,7 @@ const createUser = async (req, res) => {
     });
 
     res.status(200).json(user);
+    // sendVerificationEmail(email,firstName,otp)
     console.log("User account created successfully");
   } catch (error) {
     console.error(error);
