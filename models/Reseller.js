@@ -3,38 +3,29 @@ const mongoose = require('mongoose');
 
 const resellerSchema = new mongoose.Schema({
   firstName: {
-    type: String,
-    required: [true, "Please enter your first name!"],
+    type: String
   },
   lastName: {
-    type: String,
-    required: [true, "Please enter your last name!"],
+    type: String
   },
   email: {
-    type: String,
-    required: [true, "Please enter your shop email address"],
+    type: String
   },
   password: {
     type: String,
-    required: [true, "Please enter your password"],
-    minLength: [6, "Password should be greater than 6 characters"],
     select: true,
   },
   companyName: {
-    type: String,
-    required: [true, "Please enter your shop mame"],
+    type: String
   },
   address: {
-    type: String,
-    required: true,
+    type: String
   },
   country: {
-    type: String,
-    required: true,
+    type: String
   },
   phoneNumber: {
-    type: Number,
-    required: true,
+    type: Number
   },
   roles: {
     type: String,
