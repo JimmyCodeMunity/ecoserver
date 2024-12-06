@@ -1,59 +1,26 @@
-const mongoose = require('mongoose');
-//const bcrypt = require('bcrypt');
+const mongoose = require("mongoose");
 
-const resellerSchema = new mongoose.Schema({
-  firstName: {
-    type: String
+// Define a schema for messages
+const messageSchema = new mongoose.Schema({
+  sender: {
+    id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    model: { type: String, enum: ["Reseller", "Supplier"], required: true }, // Polymorphic reference
   },
-  lastName: {
-    type: String
+  receiver: {
+    id: { type: mongoose.Schema.Types.ObjectId, required: true },
+    model: { type: String, enum: ["Reseller", "Supplier"], required: true }, // Polymorphic reference
   },
-  email: {
-    type: String
-  },
-  password: {
+  content: {
     type: String,
-    select: true,
+    required: true,
   },
-  companyName: {
-    type: String
-  },
-  address: {
-    type: String
-  },
-  country: {
-    type: String
-  },
-  phoneNumber: {
-    type: Number
-  },
-  roles: {
-    type: String,
-    default: "Reseller",
-  },
-  status: {
-    type: String,
-    enum: ["Not approved", "Approved", "On Hold", "Rejected"],
-    default: "Not approved",
-  },
-  createdAt: {
+  timestamp: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
-})
+});
 
-// // Hash password before saving
-// userSchema.pre("save", async function () {
-//   if (this.isModified("password")) {
-//     this.password = await bcrypt.hash(this.password, 10);
-//   }
-// });
+// Create the Message model
+const Message = mongoose.model("Message", messageSchema);
 
-// // Compare password
-// userSchema.methods.comparePassword = async function (enteredPassword) {
-//   return await bcrypt.compare(enteredPassword, this.password);
-// };
-
-const Reseller = mongoose.model('Reseller', resellerSchema);
-
-module.exports = Reseller;
+module.exports = Message;
