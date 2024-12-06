@@ -27,7 +27,7 @@ const getAllUsersByEmail = async (req, res) => {
     const { email } = req.params;
     const user = await Reseller.findOne({ email });
     if (!user) {
-      res.status(404).json({ message: "you have not added any item to cart" });
+      res.status(404).json({ message: "User with that email does not exist" });
     }
     res.status(200).json(user);
   } catch (error) {
