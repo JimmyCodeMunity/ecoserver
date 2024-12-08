@@ -76,8 +76,8 @@ if (process.env.NODE_ENV !== "PRODUCTION") {
   });
 }
 
-// const port = process.env.PORT;
-// const db = process.env.DB_URL;
+const port = process.env.PORT;
+const db = process.env.DB_URL;
 
 app.listen(port, (req, res) => {
   console.log(`Server running on port ${port}`);
